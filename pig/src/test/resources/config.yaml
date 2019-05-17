@@ -1,0 +1,5 @@
+
+pnc:
+    url: ""
+da:
+    url: "http://localhost:8080/da/rest/v-1/"

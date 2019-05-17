@@ -19,10 +19,10 @@ package org.jboss.pnc.bacon.pig.impl.documents.sharedcontent.da;
 
 import org.apache.commons.lang.StringUtils;
 import org.jboss.pnc.bacon.config.Config;
-import org.junit.jupiter.api.BeforeAll;
+import org.jboss.pnc.bacon.pig.endpoints.DaReportGavEndpoint;
+import org.jboss.pnc.bacon.pig.impl.PigTestBase;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -32,12 +32,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * <br>
  * Date: 24/04/2019
  */
-class DADaoTest {
+class DADaoTest extends PigTestBase {
 
     private static DADao daDao;
 
-    @BeforeAll
-    private static void init() throws IOException {
+    @BeforeEach
+    protected void init() throws Exception {
         String configLocation = System.getProperty("configLocation");
         if (StringUtils.isBlank(configLocation)) {
             fail("configLocation system property pointing to a config yaml has to be defined to run " + DADaoTest.class);
@@ -72,4 +72,18 @@ class DADaoTest {
         assertThat(dependency.getState()).isEqualTo(DependencyState.NO_MATCH);
     }
 
+    @Test
+    public void shouldLookupArtemis270() {
+        CommunityDependency dependency =
+              new CommunityDependency("org.apache.activemq", "artemis-jms-client", "2.7.0", "jar");
+        CommunityDependency expected = new CommunityDependency("org.apache.activemq", "artemis-jms-client", "2.7.0", "jar");
+        expected.setAvailableVersions("2.7.0.redhat-000056,2.7.0.redhat-000057");
+        expected.setState(DependencyState.MATCH_FOUND);
+        DaReportGavEndpoint endpoint = new DaReportGavEndpoint();
+        endpoints.addEndpoint(endpoint);
+        endpoint.setReply(expected);
+        daDao.fillDaData(dependency);
+        assertThat(dependency.getRecommendation()).isNull();
+        assertThat(dependency.getState()).isEqualTo(DependencyState.REVERSION_POSSIBLE);
+    }
 }
